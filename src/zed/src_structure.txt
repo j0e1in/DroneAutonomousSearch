@@ -1,0 +1,23 @@
+addon.cc
+|
+---> zed/depth_info.h <---- zed/depth_info.cc
+|  |                    |
+|  |                    --- nan_interface/nan_depth_info.cc
+|  |
+|  --->zed/utils.h
+|
+---> nan_interface/nan_zed.h
+|  |
+|  ---> zed/zed.h
+|  |  |
+|  |  ---> zed/env_eval.h
+|	 |  |  |
+|	 |  |  ---> zed/utils.h
+|  |	|  |  |
+|	 |  |  |  ---> zed/glob_var.h
+|  |  |	 |  |  |
+|  |	|  |  |  ---> zed/structs.h
+|  |	|  |  |  |
+****************************
+
+Note: upper level includes lower level
