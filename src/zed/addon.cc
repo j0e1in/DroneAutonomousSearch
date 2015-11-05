@@ -5,7 +5,7 @@
 
 #include <nan.h>
 #include "nan_interface/nan_initzed_async.h"
-#include "nan_interface/nan_glob_var.h"
+#include "nan_interface/nan_public.h"
 #include "core/depth_info.h"
 
 using v8::FunctionTemplate;
@@ -26,7 +26,7 @@ void InitAll(Handle<Object> exports) {
     NanNew<FunctionTemplate>(is_initZed_ready)->GetFunction());
 
   /**
-   * nan_glob_var.h
+   * nan_public.h
    */
   exports->Set(NanNew<String>("has_valid_area"),
     NanNew<FunctionTemplate>(has_valid_area)->GetFunction());

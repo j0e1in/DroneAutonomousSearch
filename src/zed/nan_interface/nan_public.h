@@ -1,8 +1,9 @@
-#ifndef NAN_GLOB_VAR
-#define NAN_GLOB_VAR
+#ifndef nan_public
+#define nan_public
 
 #include <nan.h>
 #include "core/glob_var.h"
+#include "core/utils.h"
 
 using namespace v8;
 

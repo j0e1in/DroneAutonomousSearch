@@ -12,4 +12,9 @@ coord3d_t convert_pxl_to_pos(const coord_t pxl, int dist);
 int find_area_min_dist(area_t area);
 void skip();
 
+int getNum_valid_areas();
+bool has_target_obj_found();
+void setIntendPos(char axis, int val);
+void resetIntendPos();
+
 #endif

@@ -1,4 +1,4 @@
-#include "nan_glob_var.h"
+#include "nan_public.h"
 
 #include <node.h>
 // #include <cstring>

@@ -104,10 +104,5 @@ extern coord3d_t intend_pos;
 extern coord3d_t target_pos;
 extern log_t log_opt;
 
-int getNum_valid_areas();
-bool has_target_obj_found();
-void setIntendPos(char axis, int val);
-void resetIntendPos();
-
 
 #endif

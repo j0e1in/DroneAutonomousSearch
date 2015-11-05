@@ -211,3 +211,27 @@ int find_area_min_dist(area_t area)
 }
 
 void skip(){ return; }
+
+int getNum_valid_areas(){
+	return valid_areas.num_area;
+}
+
+bool has_target_obj_found(){
+	// TODO
+	return false;
+}
+
+void setIntendPos(char axis, int val){
+	if (axis == 'x')
+		intend_pos._x = val;
+	if (axis == 'y')
+		intend_pos._y = val;
+	if (axis == 'z')
+		intend_pos._z = val;
+}
+
+void resetIntendPos(){
+	intend_pos._x = 0;
+	intend_pos._y = 0;
+	intend_pos._z = 0;
+}

@@ -703,25 +703,17 @@ void find_target_pos()
 
 void analyze_depth_map()
 {
-	// cout << 1;
 	eval_validity();
-	// cout << 2;
 	classify_validity_area();
-	// cout << 3;
 	extract_danger_area();
-	// cout << 4;
 	// clog << "danger_areas.num_area=" << danger_areas.num_area << endl;
 
 	// If has danger detected, skip extracting valid areas
 	if (danger_areas.num_area == 0){
-		// cout << 5;
 		extract_valid_area();
-		// cout << 6;
 		// clog << "valid_areas.num_area=" << valid_areas.num_area << endl;
 	}
-	// cout << 7;
 	find_target_pos();
-	// cout << 8;
 }
 
 
