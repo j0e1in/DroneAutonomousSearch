@@ -7,6 +7,7 @@
 - Nvidia Driver
 - CUDA 7.0
 - ZED v0.9.1
+
 <!-- NO NEED FOR NOW
 - Boost library
 	- BOOST_INCLUDE_DIRS: ${BOOST_ROOT}
@@ -15,8 +16,8 @@
 
 
 ##Build & Run
-> $ cmake-js build (to build)
-
-> $ npm run (to run)
-
-> $ npm test (to test)
+```
+ $ npm run build		(to build)
+ $ npm run				(to run)
+ $ npm test				(to test)
+```

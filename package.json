@@ -13,7 +13,7 @@
     "sleep": "^3.0.0"
   },
   "scripts": {
-    "rebuild": "cmake-js rebuild",
+    "build": "cmake-js build",
     "test": "node src/drone/test/test.js",
     "start": "node src/drone/main.js"
   }
