@@ -1,20 +1,26 @@
+#include <iostream>
+
+//For argument parsing
+#include <string>
+#include <vector>
+#include <sstream>
+
 #include <nan.h>
 #include "nan_initzed_async.h"
 
 using namespace v8;
+using namespace std;
 
 class initZedAsyncWorker : public NanAsyncWorker
 {
 public:
-	initZedAsyncWorker(NanCallback *callback)
-		: NanAsyncWorker(callback) {}
+	initZedAsyncWorker(string args_str, NanCallback *callback)
+		: NanAsyncWorker(callback), args_str(args_str) {}
 	~initZedAsyncWorker() {}
 
 	void Execute()
 	{
-		int argc = 1;
-		char** argv = NULL;
-		initZed(argc, argv);
+		initZed(args_str); // main method
 	}
 
 	// void HandleOKCallback(){
@@ -26,15 +32,26 @@ public:
 	// 	int argc = 0;
 	// 	callback->Call(argc, argv);
 	// }
+private:
+	string args_str; // arguments for the program
 };
+
+
 
 NAN_METHOD(initZed)
 {
 	NanScope();
 
-	NanCallback *callback = new NanCallback(/*args[1].As<Function>()*/);
+	//parameters passed from nodejs
+	string arg_str(*NanAsciiString(args[0]));
+	/**
+	 * Another method:
+	 * 	v8::String::Utf8Value tmp_var(args[0]->ToString());
+	 * 	string foo = string(*tmp_var);
+	 */
 
-	NanAsyncQueueWorker(new initZedAsyncWorker(callback));
+	NanCallback *callback = new NanCallback(/*args[1].As<Function>()*/);
+	NanAsyncQueueWorker(new initZedAsyncWorker(arg_str, callback)); // new a worker instance here
   NanReturnUndefined();
 }
 

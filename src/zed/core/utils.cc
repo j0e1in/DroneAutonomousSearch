@@ -1,4 +1,4 @@
-#include <cstdio>
+#include <iostream>
 // #include <unistd.h> // only on linux
 #include "utils.h"
 
@@ -22,12 +22,12 @@ void update_grids(int blks)
 
 	blks_w = blks;
 	blks_h = int((float)blks_w * aspect_ratio + 0.5);
-	printf("blks_w=%d -- blks_h=%d\n", blks_w, blks_h);
+	// clog << "blks_w=" << blks_w << " -- blks_h=" << blks_h << endl;
 
 	float full_blk_h = (float)h / (float)blks_h;
 	float full_blk_w = (float)w / (float)blks_w;
-	float half_blk_h = full_blk_h / 2.;
-	float half_blk_w = full_blk_w / 2.;
+	float half_blk_h = full_blk_h / (float)2.;
+	float half_blk_w = full_blk_w / (float)2.;
 
 	image_central.x = h/2;
 	image_central.y = w/2;
@@ -146,6 +146,9 @@ int convert_pxl_to_len(const int pxl, const char dim)
 			len = (int)((float)pxl * valid_classfied.min_avg_dist * convert_base_h);
 
 		return len;
+	} else {
+		cerr << "ERR: convert_pxl_to_len => valid_classfied.min_dist_avail=false, cannot convert pxl to dim\n";
+		return -1;
 	}
 }
 
@@ -159,23 +162,18 @@ coord_t convert_pos_to_pxl(const coord3d_t pos)
 	float convert_base_h = ScaleRatio_h/(float)h;
 	coord_t pxl;
 
-	if (pos._z > 0)
-	{
-		fprintf(stderr, "WARN: pos._z is positive, intended pos is backward.\n");
+	if (pos._z > 0){
+		cerr << "WARN: pos._z is positive, intended pos is backward.\n";
 	}
 
 	pxl.x = (int)((float)pos._x/(float)abs(pos._z)/convert_base_w);
 	pxl.y = (int)((float)pos._y/(float)abs(pos._z)/convert_base_h);
 
-	printf("========\n");
-	printf("pxl.x = %d\n", pxl.x);
-	printf("pxl.y = %d\n", pxl.y);
-
 	if (pxl.x < -(h+1)/2 || pxl.x > (h+1)/2){
-		fprintf(stderr, "WARN: pxl.x exceeds border\n");
+		cerr << "WARN: pxl.x exceeds border\n";
 	}
 	if (pxl.y < -(w+1)/2 || pxl.y > (w+1)/2){
-		fprintf(stderr, "WARN: pxl.y exceeds border\n");
+		cerr << "WARN: pxl.y exceeds border\n";
 	}
 	return pxl;
 }
@@ -199,9 +197,9 @@ coord3d_t convert_pxl_to_pos(const coord_t pxl, int dist)
 int find_area_min_dist(area_t area)
 {
 	int min_dist = Inf;
-	for (int i = area.top_l.h; i <= area.btm_r.h; ++i)
+	for (int i = area.top_l.h; i < area.btm_r.h; ++i)
 	{
-		for (int j = area.top_l.w; j <= area.btm_r.w; ++j)
+		for (int j = area.top_l.w; j < area.btm_r.w; ++j)
 		{
 			if (validity_grid[i][j].prev_dist < min_dist)
 			{
@@ -211,3 +209,5 @@ int find_area_min_dist(area_t area)
 	}
 	return min_dist;
 }
+
+void skip(){ return; }

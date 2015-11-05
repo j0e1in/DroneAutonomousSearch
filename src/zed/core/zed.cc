@@ -3,14 +3,13 @@
 */
 
 //Standard includes
-#include <stdio.h>
-#include <string.h>
+#include <iostream>
+#include <chrono> //high_resolution_clock
 #include <ctime>
 
-#include <chrono> //high_resolution_clock
-#include "env_eval.h"
-#include "zed.h"
 #include "FPS.h"
+#include "zed.h"
+#include "env_eval.h"
 
 using namespace std;
 using namespace sl::zed;
@@ -93,7 +92,7 @@ void printtext(int x, int y, string String)
 
   y = h_wnd - y;
 
-  glRasterPos2i(x - (w_wnd * 0.035), y + (h_wnd * 0.02));
+  glRasterPos2i((GLint)(x - (w_wnd * 0.035)), (GLint)(y + (h_wnd * 0.02)));
   for (unsigned int i = 0; i < String.size(); i++)
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, String[i]);
 
@@ -104,7 +103,7 @@ void printtext(int x, int y, string String)
   glPopMatrix();
 
   glDisable(GL_TEXTURE_2D);
-  float r_ = 0.01;
+  float r_ = (float)0.01;
   float d_ = (r_ * w_wnd) / w_wnd;
 
   float n_x_ = (float)x / w_wnd;
@@ -128,9 +127,9 @@ void printtext(int x, int y, string String)
 void print_depth_info()
 {
   int i, j;
-  switch(DepthInfoID){
+  switch(drawDepthInfo){
 
-    case 1: // print distance
+    case 1: // draw distance
 
       for (i = 0; i < blks_h; ++i){
         for (j = 0; j < blks_w; ++j){
@@ -148,7 +147,7 @@ void print_depth_info()
 
       break;
 
-    case 2: // print area classification
+    case 2: // draw area classification
 
       for (i = 0; i < blks_h; ++i){
         for (j = 0; j < blks_w; ++j){
@@ -191,7 +190,7 @@ void get_depth()
         // *****
 
         // Convert distance from 'mm' to 'cm'
-        depth_clamp = depth_click / 10.;
+        depth_clamp = (int)(depth_click / (float)10.);
 
         if (depth_clamp > 0){
           dist_grid[i][j].dist = depth_clamp; // Save distance, in 'cm'
@@ -277,6 +276,7 @@ void draw() {
     glEnd();
 
 
+
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
     /*==========  Custom code  ==========*/
     get_depth();
@@ -285,8 +285,7 @@ void draw() {
     /*===================================*/
     high_resolution_clock::time_point t4 = high_resolution_clock::now();
     auto duration_cust = duration_cast<milliseconds>( t4 - t3 ).count();
-    cout << "Custom code: " << duration_cust << "ms\n";
-
+    log_opt.loop_time ? clog << "Custom code: " << duration_cust << "ms\n" : skip() ;
 
 
     //swap.
@@ -304,13 +303,74 @@ void draw() {
   }
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>( t2 - t1 ).count();
-  cout << "loop: " << duration << "ms\n";
+  log_opt.loop_time ? clog << "loop: " << duration << "ms\n" : skip();
 }
 
-int initZed(int argc, char **argv)
+vector<string> split(const string &s, char delim) {
+    vector<string> elems;
+    stringstream ss(s);
+    string item;
+    while (getline(ss, item, delim)) {
+        elems.push_back(item);
+    }
+    return elems;
+}
+
+void parseArgs(const string arg_str)
 {
+  vector<string> argv = split(arg_str, ' ');
+  bool isLogArg = false; // for "_log" option
+  bool isDrawArg = false; // for "_draw" option
+
+  // for (auto it=args.begin(); it != args.end(); it++){
+  for (const string &it : argv){
+    if (it.at(0) == '_'){
+
+      //reset flags
+      isLogArg = false;
+      isDrawArg = false;
+
+      if (it == "_h"){
+        clog << "========== Help Menu ==========\n"
+             << "\n"
+             << "* _h     == help menu\n"
+             << "\n"
+             << "* _log   == log debug info, available options:\n"
+             << "  => loop_time   -- duration of each draw loop takes\n"
+             << "  => example: '_log loop_time'\n"
+             << "\n"
+             << "* _draw  == draw depth info on window, available options:\n"
+             << "  => 0   -- none, default value\n"
+             << "  => 1   -- draw distance of each block\n"
+             << "  => 2   -- draw area classification\n"
+             << "\n"
+             << "===============================\n";
+        exit(0);
+      }else if (it == "_log"){
+        isLogArg = true;
+      }else if (it == "_draw"){
+        isDrawArg = true;
+      }
+
+    }else if (isLogArg){ // "-log"
+      log_opt.loop_time = (it == "loop_time");
+    }else if (isDrawArg){
+      drawDepthInfo = (atoi(it.c_str()));
+      clog << "@@drawDepthInfo is set to " << drawDepthInfo << endl;
+      isDrawArg = false; // accept only one argument
+    }
+  }
+}
+
+int initZed(const string arg_str)
+{
+  parseArgs(arg_str);
+
+  int argc = 0;
+  char **argv = NULL;
   //init glut
   glutInit(&argc, argv);
+  // glutInit(&argc, argv);
 
   /*Setting up  The Display  */
   glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGBA | GLUT_DEPTH);
@@ -326,29 +386,25 @@ int initZed(int argc, char **argv)
   //init GLEW Library
   glewInit();
 
-  //Setup our ZED Camera (construct and Init)
-  if (argc == 1) { // Use in Live Mode
-    switch(CameraResolution){
-      case 480: // VGA
-        zed = new Camera(VGA, DefaultFPS);
-        break;
-      case 720:
-        zed = new Camera(HD720, DefaultFPS);
-        break;
-      case 1080:
-        zed = new Camera(HD1080, DefaultFPS);
-        break;
-    }
-  } else {// Use in SVO playback mode
-    zed = new Camera(argv[1]);
+  //Setup ZED Camera (construct and Init)
+  switch(CameraResolution){
+    case 480: // VGA
+      zed = new Camera(VGA, DefaultFPS);
+      break;
+    case 720:
+      zed = new Camera(HD720, DefaultFPS);
+      break;
+    case 1080:
+      zed = new Camera(HD1080, DefaultFPS);
+      break;
   }
 
   ERRCODE err = zed->init(MODE::PERFORMANCE, 0, true, false);
   // ERRCODE display
-  std::cout << "ZED Init : " << errcode2str(err) << std::endl;
+  clog << "ZED Init : " << errcode2str(err) << std::endl;
   if (err != SUCCESS) {
     delete zed;
-    printf("ERR: ZED init failed.\n");
+    cerr << "ERR: ZED init failed.\n";
     return -1;
   }else{
     initZed_ready = true;
@@ -373,12 +429,12 @@ int initZed(int argc, char **argv)
   // reliabilityIdx = 100;
   // zed->setConfidenceThreshold(reliabilityIdx);
 
+
   /**********************************/
   /************* OPENGL *************/
   /**********************************/
 
   cudaError_t err1, err2;
-
 
   //Create and Register OpenGL Texture for Image (RGBA -- 4channels)
   glEnable(GL_TEXTURE_2D);
@@ -401,7 +457,7 @@ int initZed(int argc, char **argv)
   err2 = cudaGraphicsGLRegisterImage(&pcuDepthRes, depthTex, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
 
   if (err1!=0 || err2!=0) {
-    printf("ERR: error in OpenGL in initZed\n");
+    cerr << "ERR: error in OpenGL in initZed\n";
     return -1;
   }
 
@@ -426,6 +482,10 @@ int initZed(int argc, char **argv)
   if (link_status != GL_TRUE) return -2;
 
   glUniform1i(glGetUniformLocation(program, "texImage"), 0);
+
+  /**********************************/
+  /************* OPENGL *************/
+  /**********************************/
 
   //Set Draw Loop
   glutKeyboardFunc(keyboard);

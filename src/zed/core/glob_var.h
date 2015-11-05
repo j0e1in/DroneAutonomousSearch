@@ -1,6 +1,7 @@
 #ifndef GLOB_VAR_H
 #define GLOB_VAR_H
 
+
 #include "structs.h"
 
 // struct coord_;
@@ -35,11 +36,6 @@ const int SensingMode = 1;
 // sensing mode:
 //		1 (FULL)
 //	  2 (RAW)
-const int DepthInfoID = 2;
-// depth info to print:
-// 		1 (distance)
-// 		2 (area classification)
-// 		others (turn off)
 
 // real width in image of every 1 cm from camera, measured in cm
 // const float Dist_Width_Ratio = 17.8/12.5;//= 1.424 //11/7.5 = 1.4667 //20.8/14.4 = 1.4444
@@ -48,8 +44,8 @@ const int DepthInfoID = 2;
 /* note: these ratios assume no distortion on images */
 // const int FocalLength = 144; // cm
 // const float ScaleRatio = (float)FocalLength/100.;
-const float ScaleRatio_w = 7.1/5.;
-const float ScaleRatio_h = 9.5/12.;
+const float ScaleRatio_w = (float)7.1/(float)5.;
+const float ScaleRatio_h = (float)9.5/(float)12.;
 const int Inf = 999999;
 
 // (w)
@@ -69,15 +65,25 @@ const int Inf = 999999;
  */
 
 const int minCalibrationDist = 50; // min distance zed can analyze
-const int defaultSafeDistance = minCalibrationDist + 150; // in cm
-const int minSafeDistance = defaultSafeDistance + 50;
-const int maxUnsafeDistance = defaultSafeDistance - 50;
+const int defaultSafeDistance = minCalibrationDist + 100; // in cm
+const int maxUnsafeDistance = defaultSafeDistance - 30;
+const int minSafeDistance = defaultSafeDistance;
 const int MaxValidAreas = 20;
-const int DroneSafeWidth = 80;
-const int DroneSafeHieght = 50;
+const int DroneSafeWidth = 80; // minimal width a drone can pass through
+const int DroneSafeHeight = 50; // minimal height a drone can pass through
 
 
 /** Global variables **/
+
+extern int drawDepthInfo;
+// depth info to draw:
+// 		0 (none)
+// 		1 (distance)
+// 		2 (area classification)
+
+
+// log flags
+extern bool log_loopDuration;
 
 extern int w;
 extern int h;
@@ -96,7 +102,7 @@ extern areas_t valid_areas;
 extern areas_t danger_areas;
 extern coord3d_t intend_pos;
 extern coord3d_t target_pos;
-
+extern log_t log_opt;
 
 int getNum_valid_areas();
 bool has_target_obj_found();

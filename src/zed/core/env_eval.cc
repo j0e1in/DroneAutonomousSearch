@@ -2,9 +2,7 @@
  * 	Evaluate obstacles' position and size according	to their distance.
  */
 
-#include <cstdio>
-#include <cstdlib>
-// #include <unistd.h> // only on linux
+#include <iostream>
 #include <cmath>
 #include "env_eval.h"
 
@@ -54,11 +52,12 @@ void eval_validity()
 					 *
 					 * In this case, still mark it as -1 to make drone avoid it.
 					 *
-					 * Though this shouldn't happen in normal condition, because
-					 * there are minimal safe distance restriction that the min
-					 * distance a drone can get close to a obstacle.
+					 * This shouldn't happen in normal condition, however, because
+					 * there is minimal safe distance the drone is allowed to keep.
 					 * This only happens if external forces apply to it or some
-					 * functional errors.
+					 * functionality errors, such as wind or unstable flight.
+					 *
+					 *
 					 */
 
 					// if (isClosing()) {
@@ -277,7 +276,7 @@ void classify_validity_area()
 	// Set min dist availability to false to prevent others from using it
 	if (valid_classfied.min_avg_dist == (float)Inf){
 		valid_classfied.min_dist_avail = false;
-		fprintf(stderr, "WARN: min_avg_dist is Inf\n");
+		cerr << "WARN: min_avg_dist is Inf\n";
 	}
 	else if (min_dist_validity > 0) {
 		/*all blocks in image are valid to move*/
@@ -321,7 +320,7 @@ bool isWidthtooShort(grid_index_t l, grid_index_t r)
 	int width = r_x - l_x;
 
 	width = convert_pxl_to_len(width, 'w');
-	if (width < DroneSafeHieght)
+	if (width < DroneSafeHeight)
 		return true;
 	else
 		return false;
@@ -334,7 +333,7 @@ bool isHieghttooShort(grid_index_t top, grid_index_t btm)
 	int hieght = btm_y - top_y;
 
 	hieght = convert_pxl_to_len(hieght, 'h');
-	if (hieght < DroneSafeHieght)
+	if (hieght < DroneSafeHeight)
 		return true;
 	else
 		return false;
@@ -377,8 +376,8 @@ void searc_top_border(grid_index_t* blk, int vlimit=-1)
 	int k = blk->h;
 
 	if (blk->w+1 >= blks_w) {
-		fprintf(stderr, "ERROR: searching top border out of index, fix this bug\n");
-		exit(1);
+		cerr << "ERROR: searching top border out of index, fix this bug\n";
+		return;
 	}
 	// check the right neighbor block whether it's invalid
 	while (k > 0){
@@ -398,8 +397,8 @@ void searc_top_border(grid_index_t* blk, int vlimit=-1)
 
 bool is_whole_area_valid(area_t *area)
 {
-	// printf("(%d,%d,%d,%d)\n", area->top_l.h, area->btm_r.h
-	//        									, area->top_l.w, area->top_r.w);
+	// clog << "(" << area->top_l.h << ", " << area->btm_r.h
+	     // << ", " << area->top_l.w << ", " << area->top_r.w << ")\n";
 	for (int i = area->top_l.h; i <= area->btm_r.h; ++i){
 		for (int j = area->top_l.w; j <= area->top_r.w; ++j){
 			if (validity_grid[i][j].valid <= 0){
@@ -544,7 +543,7 @@ void extract_valid_area()
 								// check if the area contains no invalid block
 								if (is_whole_area_valid(&tmp_area)){
 									if (valid_areas.num_area >= MaxValidAreas) {
-										fprintf(stderr, "WARN: Number of areas exceeds maximum\n");
+										cerr << "WARN: Number of areas exceeds maximum\n";
 										return;
 									}
 									valid_areas.areas[valid_areas.num_area++] = tmp_area;
@@ -588,7 +587,7 @@ void extract_danger_area()
 
 	danger_areas.num_area = 0;
 	danger_areas.min_dist = find_invalid_min_dist();
-	// printf("min_dist=%d\n", danger_areas.min_dist);
+	// clog << "min_dist=" << danger_areas.min_dist << endl;
 	if (danger_areas.min_dist < maxUnsafeDistance)
 	{
 		danger_areas.num_area = 1;
@@ -609,7 +608,7 @@ void set_target_pos(coord3d_t pos){
 
 int choose_valid_area(grid_index_t *central_points, int num)
 {
-	int min_shift = Inf, shift;
+	double min_shift = (double)Inf, shift;
 	int no = -1;
 	coord_t pxl_pos;
 	for (int i = 0; i < num; ++i)
@@ -638,13 +637,13 @@ int choose_valid_area(grid_index_t *central_points, int num)
 
 void find_target_pos()
 {
-	if (danger_areas.num_area > 0)
-	{
+
+	if (danger_areas.num_area > 0){
+
 		// Set to move backward to avoid collision
-		set_target_pos(0,0,
-			maxUnsafeDistance - danger_areas.min_dist);
-		// printf("maxUnsafeDistance = %d\n", maxUnsafeDistance);
-		// printf("danger_areas.min_dist = %d\n", danger_areas.min_dist);
+		set_target_pos(0, 0, maxUnsafeDistance - danger_areas.min_dist);
+		// clog << "maxUnsafeDistance=" << maxUnsafeDistance << endl;
+		// clog << "danger_areas.min_dist=" << danger_areas.min_dist << endl;
 
 	}else if(valid_areas.num_area > 0){
 		area_t tmp_area;
@@ -669,8 +668,8 @@ void find_target_pos()
 		// 		|| min dist in valid area - minSafeDistance
 		// 		|| 0
 
-		// printf("dist = %d\n", dist);
-		// printf("intend_pos._z = %d\n", intend_pos._z);
+		// clog << "dist=" << dist << endl;
+		// clog << "intend_pos._z=" << intend_pos._z << endl;
 		if (dist > -intend_pos._z) // negative means foreward
 		{
 			dist = intend_pos._z;
@@ -680,36 +679,49 @@ void find_target_pos()
 			dist -= minSafeDistance;
 			dist = -dist;
 		}
-		// printf("dist' = %d\n", dist);
+		// clog << "dist=" << dist << endl;
 
 		coord_t pxl;
 		pxl.x = grid[central_points[no].h][central_points[no].w].x - w/2;
 		pxl.y = grid[central_points[no].h][central_points[no].w].y - h/2;
-
 		set_target_pos(convert_pxl_to_pos(pxl, dist));
+
 	}else{
-		// printf("--no danger_areas or valid_areas\n");
+
+		// clog << "--no danger_areas or valid_areas\n";
 		set_target_pos(0,0,0); // nowhere to move, can only turn left or right
+
 	}
-	// printf("target_pos.x = %d\n", target_pos._x);
-	// printf("target_pos.y = %d\n", target_pos._y);
-	// printf("target_pos.z = %d\n", target_pos._z);
+
+
+	// clog << "target_pos=("
+	// 		 << target_pos._x << ", "
+	// 		 << target_pos._y << ", "
+	// 		 << target_pos._z << ")\n";
 }
 
 
 void analyze_depth_map()
 {
+	// cout << 1;
 	eval_validity();
+	// cout << 2;
 	classify_validity_area();
+	// cout << 3;
 	extract_danger_area();
-	// printf("# danger areas: %d\n", danger_areas.num_area);
+	// cout << 4;
+	// clog << "danger_areas.num_area=" << danger_areas.num_area << endl;
 
 	// If has danger detected, skip extracting valid areas
 	if (danger_areas.num_area == 0){
+		// cout << 5;
 		extract_valid_area();
-		// printf("# valid areas: %d\n", valid_areas.num_area);
+		// cout << 6;
+		// clog << "valid_areas.num_area=" << valid_areas.num_area << endl;
 	}
+	// cout << 7;
 	find_target_pos();
+	// cout << 8;
 }
 
 

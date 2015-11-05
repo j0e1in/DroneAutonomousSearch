@@ -7,13 +7,9 @@ private:
 	std::chrono::high_resolution_clock::time_point t_init;
 
 public:
-	inline Interval() : t_init(std::chrono::high_resolution_clock::now())
-	{
-	}
+	inline Interval() : t_init(std::chrono::high_resolution_clock::now()){}
 
-	virtual ~Interval()
-	{
-	}
+	virtual ~Interval(){}
 
 	inline double value()
 	{
@@ -29,9 +25,7 @@ protected:
 	Interval m_fpsinterval;
 
 public:
-	Fps() : m_fps(0), m_fpscount(0)
-	{
-	}
+	Fps() : m_fps(0), m_fpscount(0){}
 
 	void update()
 	{

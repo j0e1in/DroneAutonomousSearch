@@ -24,7 +24,7 @@ NAN_METHOD(DepthInfo::New) {
 
   if (args.IsConstructCall()) {
     // Invoked as constructor: `new DepthInfo(...)`
-    float value = args[0]->IsUndefined() ? 0 : args[0]->NumberValue();
+    float value = args[0]->IsUndefined() ? 0 : (float)args[0]->NumberValue();
     DepthInfo* obj = new DepthInfo();
     obj->Wrap(args.This());
     NanReturnValue(args.This());

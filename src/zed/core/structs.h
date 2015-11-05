@@ -71,6 +71,10 @@ typedef struct areas_ {
 	area_t *areas;
 } areas_t;
 
+typedef struct log_ {
+	bool loop_time = false;
+} log_t;
+
 
 #endif
 

@@ -10,5 +10,6 @@ int convert_pxl_to_len(const int pxl, const char dim);
 coord_t convert_pos_to_pxl(const coord3d_t pos);
 coord3d_t convert_pxl_to_pos(const coord_t pxl, int dist);
 int find_area_min_dist(area_t area);
+void skip();
 
 #endif

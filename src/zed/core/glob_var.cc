@@ -1,5 +1,10 @@
 #include "glob_var.h"
 
+// log flags
+bool log_loopDuration;
+
+int drawDepthInfo = 0;
+
 int w; // image width (in pixel)
 int h; // image height (in pixel)
 int blks_w; // #blocks in image on horizontal axis
@@ -17,7 +22,7 @@ areas_t valid_areas;
 areas_t danger_areas;
 coord3d_t intend_pos;
 coord3d_t target_pos;
-
+log_t log_opt;
 
 int getNum_valid_areas(){
 	return valid_areas.num_area;
