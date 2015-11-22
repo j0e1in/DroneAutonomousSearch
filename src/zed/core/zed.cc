@@ -42,7 +42,7 @@ std::string strFragmentShad = ("uniform sampler2D texImage;\n"
 
 
 bool is_initZed_ready(){
-  return (initZed_ready == true);
+  return initZed_ready;
 }
 
 void keyboard(unsigned char key, int x, int y)
@@ -64,6 +64,10 @@ void keyboard(unsigned char key, int x, int y)
       if (num_blks_w > 0)
         num_blks_w -= 1;
       update_grids(num_blks_w);
+      break;
+
+    case 'm':
+      isMovingForward = !isMovingForward;
       break;
 
     case 'q':
@@ -92,7 +96,7 @@ void printtext(int x, int y, string String)
 
   y = h_wnd - y;
 
-  glRasterPos2i((GLint)(x - (w_wnd * 0.035)), (GLint)(y + (h_wnd * 0.02)));
+  glRasterPos2i((GLint)(x - (w_wnd * 0.01)), (GLint)(y + (h_wnd * 0.02)));
   for (unsigned int i = 0; i < String.size(); i++)
     glutBitmapCharacter(GLUT_BITMAP_HELVETICA_12, String[i]);
 
@@ -127,15 +131,17 @@ void printtext(int x, int y, string String)
 void print_depth_info()
 {
   int i, j;
-  switch(drawDepthInfo){
+
+  switch(log_opt.drawDepthMode){
 
     case 1: // draw distance
 
       for (i = 0; i < blks_h; ++i){
         for (j = 0; j < blks_w; ++j){
+
           ostringstream ostr;
-          if (dist_grid[i][j].dist > 0) {
-            ostr << (float)dist_grid[i][j].dist / 100. << "m";
+          if (grid[i][j].dist > 0) {
+            ostr << (float)grid[i][j].dist / 100. << "m";
           } else {
             ostr << "NaN";
           }
@@ -152,13 +158,75 @@ void print_depth_info()
       for (i = 0; i < blks_h; ++i){
         for (j = 0; j < blks_w; ++j){
           ostringstream ostr;
-          // ostr << "[" << validity_grid[i][j].valid << "@"
+          // ostr << "[" << grid[i][j].valid << "@"
           //      << valid_classfied.area_grid[i][j].area_no << "]";
-          ostr << "[" << validity_grid[i][j].valid << "@"
-               << (float)dist_grid[i][j].dist / 100. << "]";
+          ostr << "[" << grid[i][j].valid << "-"
+               << (float)grid[i][j].dist / 100. << "]";
 
           printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
           glColor3f(1.0f, 1.0f, 1.0f);
+        }
+      }
+      break;
+
+    case 3: // draw valid / invalid / danger areas
+
+      if (danger_areas.num_area > 0){ // draw danger areas
+        for (int i = sens_area.topl.h-1; i < sens_area.btmr.h; ++i){
+          for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
+            if (grid[i][j].valid < 0){
+              ostringstream ostr;
+              ostr << "dg-\n" << (float)grid[i][j].dist / 100.;
+              printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
+              glColor3f(1.0f, 1.0f, 1.0f);
+            }
+          }
+        }
+      }else if (invalid_areas.num_area > 0){
+        for (int i = sens_area.topl.h-1; i < sens_area.btmr.h; ++i){
+          for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
+            if (grid[i][j].valid == 0){
+              ostringstream ostr;
+              ostr << "nv-\n" << (float)grid[i][j].dist / 100.;
+              printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
+              glColor3f(1.0f, 1.0f, 1.0f);
+            }
+          }
+        }
+      }else{ // draw valid blks
+        for (int i = sens_area.topl.h-1; i < sens_area.btmr.h; ++i){
+          for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
+            if (grid[i][j].valid > 0){
+              ostringstream ostr;
+              ostr << "vd-\n" << (float)grid[i][j].dist / 100.;
+              printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
+              glColor3f(1.0f, 1.0f, 1.0f);
+            }else{
+              cerr << "WARN: has blk is not valid in valid drawing loop" << endl;
+            }
+          }
+        }
+      }
+      break;
+
+    case 4: // draw sensing area (not ignored for obstacle detection)
+
+      for (i = 0; i < blks_h; ++i){
+        for (j = 0; j < blks_w; ++j){
+          ostringstream ostr;
+          // If the block is inside the area then draw it
+          if (i >= sens_area.topl.h-1
+           && i < sens_area.btmr.h
+           && j >= sens_area.topl.w-1
+           && j < sens_area.btmr.w){
+            if (grid[i][j].dist > 0) {
+              ostr << (float)grid[i][j].dist / 100. << "m";
+            } else {
+              ostr << "NaN";
+            }
+            printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
+            glColor3f(1.0f, 1.0f, 1.0f);
+          }
         }
       }
       break;
@@ -168,7 +236,7 @@ void print_depth_info()
   return;
 }
 
-// Retreive distance of each block, store it to dist_grid
+// Retreive distance of each block, store it to grid
 void get_depth()
 {
   int i, j;
@@ -193,10 +261,10 @@ void get_depth()
         depth_clamp = (int)(depth_click / (float)10.);
 
         if (depth_clamp > 0){
-          dist_grid[i][j].dist = depth_clamp; // Save distance, in 'cm'
+          grid[i][j].dist = depth_clamp; // Save distance, in 'cm'
         }
         else{
-          dist_grid[i][j].dist = -1; // Save distance as negative on failure
+          grid[i][j].dist = -1; // Save distance as negative on failure
         }
       }
     }
@@ -205,7 +273,8 @@ void get_depth()
 }
 
 //glut main loop : grab --> extract GPU Mat --> send to OpenGL and quad.
-void draw() {
+void draw()
+{
   high_resolution_clock::time_point t1 = high_resolution_clock::now();
 
   int res = zed->grab(dm_type, true, true);
@@ -280,6 +349,13 @@ void draw() {
     high_resolution_clock::time_point t3 = high_resolution_clock::now();
     /*==========  Custom code  ==========*/
     get_depth();
+
+    // Set area of blocks for obstable detection
+    if (isMovingForward){
+      sens_area = cvt_pxl_to_area(sens_area_pxl_moving);
+    }else{
+      sens_area = cvt_pxl_to_area(sens_area_pxl);
+    }
     analyze_depth_map();
     print_depth_info();
     /*===================================*/
@@ -306,7 +382,9 @@ void draw() {
   log_opt.loop_time ? clog << "loop: " << duration << "ms\n" : skip();
 }
 
-vector<string> split(const string &s, char delim) {
+// For parsing args
+vector<string> split(const string &s, char delim)
+{
     vector<string> elems;
     stringstream ss(s);
     string item;
@@ -318,6 +396,7 @@ vector<string> split(const string &s, char delim) {
 
 void parseArgs(const string arg_str)
 {
+
   vector<string> argv = split(arg_str, ' ');
   bool isLogArg = false; // for "_log" option
   bool isDrawArg = false; // for "_draw" option
@@ -338,11 +417,15 @@ void parseArgs(const string arg_str)
              << "  _log   log debug info, available options:\n"
              << "    @ example: '_log loop_time'\n"
              << "    > loop_time   -- duration of each draw loop takes\n"
+             << "    > danger   -- whether has danger, and the dist of the block\n"
              << "\n"
              << "  _draw  draw depth info on window, available options:\n"
+             << "    @ example: '_draw 1'\n"
              << "    > 0   none, default value\n"
              << "    > 1   draw distance of each block\n"
              << "    > 2   draw area classification\n"
+             << "    > 3   draw danger, invalid or valid blks\n"
+             << "    > 4   draw sensing area\n"
              << "\n"
              << "===============================\n";
         exit(0);
@@ -354,9 +437,10 @@ void parseArgs(const string arg_str)
 
     }else if (isLogArg){ // "-log"
       log_opt.loop_time = (it == "loop_time");
+      log_opt.danger = (it == "danger");
     }else if (isDrawArg){
-      drawDepthInfo = (atoi(it.c_str()));
-      clog << "@@drawDepthInfo is set to " << drawDepthInfo << endl;
+      log_opt.drawDepthMode = (atoi(it.c_str()));
+      clog << "@@ log_opt.drawDepthMode is set to " << log_opt.drawDepthMode << "\n";
       isDrawArg = false; // accept only one argument
     }
   }
@@ -377,7 +461,7 @@ int initZed(const string arg_str)
   //Configure Window Postion
   glutInitWindowPosition(50, 25);
 
-  //Configure Window Size (w=h*vedio_aspect_ratio, h)
+  //Configure Window Size (w=1280*(500/720)*2)
   glutInitWindowSize(1778, 500);
 
   //Create Window
@@ -388,7 +472,7 @@ int initZed(const string arg_str)
 
   //Setup ZED Camera (construct and Init)
   switch(CameraResolution){
-    case 480: // VGA
+    case 480:
       zed = new Camera(VGA, DefaultFPS);
       break;
     case 720:
@@ -399,15 +483,13 @@ int initZed(const string arg_str)
       break;
   }
 
-  ERRCODE err = zed->init(MODE::PERFORMANCE, 0, true, false);
+  ERRCODE err = zed->init(MODE::PERFORMANCE, 0, true);
   // ERRCODE display
-  clog << "ZED Init : " << errcode2str(err) << std::endl;
+  clog << "ZED Init : " << errcode2str(err) << endl;
+
   if (err != SUCCESS) {
     delete zed;
-    cerr << "ERR: ZED init failed.\n";
     return -1;
-  }else{
-    initZed_ready = true;
   }
 
   quit = false; // quit draw loop
@@ -415,7 +497,14 @@ int initZed(const string arg_str)
   //get Image Size
   w = zed->getImageSize().width;
   h = zed->getImageSize().height;
+
   aspect_ratio = ((float)h/(float)w);
+
+  sens_area_pxl.topl = {(int)(w*.1f), (int)(h*.25f)};
+  sens_area_pxl.btmr = {(int)(w*.9f), (int)(h*.75f)};
+
+  sens_area_pxl_moving.topl = {(int)(w*.1f), (int)(h*.25f)};
+  sens_area_pxl_moving.btmr = {(int)(w*.9f), (int)(h*.60f)};
 
   num_blks_w = DefaultBlocks;
   update_grids(num_blks_w);
@@ -424,6 +513,8 @@ int initZed(const string arg_str)
     dm_type = SENSING_MODE::FULL;
   else
     dm_type = SENSING_MODE::RAW;
+
+  initZed_ready = true;
 
   // Setting confidence threshold for depth map
   // reliabilityIdx = 100;
@@ -457,7 +548,7 @@ int initZed(const string arg_str)
   err2 = cudaGraphicsGLRegisterImage(&pcuDepthRes, depthTex, GL_TEXTURE_2D, cudaGraphicsMapFlagsNone);
 
   if (err1!=0 || err2!=0) {
-    cerr << "ERR: error in OpenGL in initZed\n";
+    cerr << "ERR: error init OpenGL\n";
     return -1;
   }
 
@@ -484,7 +575,7 @@ int initZed(const string arg_str)
   glUniform1i(glGetUniformLocation(program, "texImage"), 0);
 
   /**********************************/
-  /************* OPENGL *************/
+  /*********** OPENGL END ***********/
   /**********************************/
 
   //Set Draw Loop

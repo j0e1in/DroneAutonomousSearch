@@ -31,6 +31,9 @@ void InitAll(Handle<Object> exports) {
   exports->Set(NanNew<String>("has_valid_area"),
     NanNew<FunctionTemplate>(has_valid_area)->GetFunction());
 
+  exports->Set(NanNew<String>("has_invalid_area"),
+    NanNew<FunctionTemplate>(has_invalid_area)->GetFunction());
+
   exports->Set(NanNew<String>("has_danger_area"),
     NanNew<FunctionTemplate>(has_danger_area)->GetFunction());
 
@@ -42,6 +45,9 @@ void InitAll(Handle<Object> exports) {
 
   exports->Set(NanNew<String>("getTargetPos"),
     NanNew<FunctionTemplate>(getTargetPos)->GetFunction());
+
+  exports->Set(NanNew<String>("setIsMovingForward"),
+    NanNew<FunctionTemplate>(setIsMovingForward)->GetFunction());
 
   /**
    * depth_info.h

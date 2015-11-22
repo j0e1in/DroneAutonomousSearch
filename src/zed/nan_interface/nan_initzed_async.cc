@@ -20,7 +20,10 @@ public:
 
 	void Execute()
 	{
-		initZed(args_str); // main method
+		if (initZed(args_str) < 0){ // main method
+			cerr << "ERR: Initializing ZED failed.";
+			exit(0);
+		}
 	}
 
 	// void HandleOKCallback(){

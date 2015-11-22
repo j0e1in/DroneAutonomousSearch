@@ -1,0 +1,19 @@
+
+> drone-search@0.0.1 start D:\Graduation Project\DroneSearch
+> node src/drone/main.js
+
+
+@ Waiting for zed...
+
+ZED SDK >> (Init) GPU used : GeForce GTX 960, ID : 0 
+ZED SDK >> (Init) Quality mode has been set to Performance mode
+ZED SDK >> (Init) ZED detected
+ZED SDK >> (Init) Creating ZED GPU mem...
+ZED SDK >> (Init) Trying self calibration... 
+ZED SDK >> (Init) Done...
+
+@ Zed is ready.
+
+battery: undefined
+Dronelog ## taking off
+Dronelog ## stoping

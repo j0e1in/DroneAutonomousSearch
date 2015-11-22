@@ -1,7 +1,8 @@
 #include "nan_public.h"
 
 #include <node.h>
-// #include <cstring>
+#include "core/glob_var.h"
+#include "core/utils.h"
 
 using namespace std;
 using namespace v8;
@@ -10,6 +11,11 @@ using namespace node;
 NAN_METHOD(has_valid_area){
 	NanScope();
 	NanReturnValue(NanNew<Number>(valid_areas.num_area));
+}
+
+NAN_METHOD(has_invalid_area){
+  NanScope();
+  NanReturnValue(NanNew<Number>(invalid_areas.num_area));
 }
 
 NAN_METHOD(has_danger_area)
@@ -50,4 +56,9 @@ NAN_METHOD(getTargetPos)
   // ARRAY->Set(2, NanNew<Number>(target_pos._z));
 
   NanReturnValue(DICT);
+}
+
+NAN_METHOD(setIsMovingForward)
+{
+  isMovingForward = (args[0]->Uint32Value() > 0) ? true : false;
 }

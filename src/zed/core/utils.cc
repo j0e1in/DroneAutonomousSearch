@@ -9,7 +9,7 @@
 using namespace std;
 
 
-void update_grids(int blks)
+void update_grids(const int blks)
 {
 	/**
 	 * Change number of blocks in grids at runtime and initialize them.
@@ -24,13 +24,10 @@ void update_grids(int blks)
 	blks_h = int((float)blks_w * aspect_ratio + 0.5);
 	// clog << "blks_w=" << blks_w << " -- blks_h=" << blks_h << endl;
 
-	float full_blk_h = (float)h / (float)blks_h;
-	float full_blk_w = (float)w / (float)blks_w;
-	float half_blk_h = full_blk_h / (float)2.;
-	float half_blk_w = full_blk_w / (float)2.;
-
-	image_central.x = h/2;
-	image_central.y = w/2;
+	float full_blk_h = (float)h / (float)blks_h; // width of each blk
+	float full_blk_w = (float)w / (float)blks_w; // height of each blk
+	float half_blk_h = full_blk_h / 2.f;
+	float half_blk_w = full_blk_w / 2.f;
 
 	//Free up old resources
 	if (grid != NULL)
@@ -38,12 +35,6 @@ void update_grids(int blks)
 
 	if (r_grid != NULL)
 		free(r_grid);
-
-	if (dist_grid != NULL)
-		free(dist_grid);
-
-	if (validity_grid != NULL)
-		free(validity_grid);
 
 	if (valid_classfied.area_grid != NULL)
 		free(valid_classfied.area_grid);
@@ -56,24 +47,14 @@ void update_grids(int blks)
 
 
 	// alloc a matrix for storing block position information for image
-	grid = (coord_t**) malloc(sizeof(coord_t*) * blks_h);
+	grid = (blk_grid_t**) malloc(sizeof(blk_grid_t*) * blks_h);
 	for (i = 0; i < blks_h; ++i)
-		grid[i] = (coord_t*) malloc(sizeof(coord_t) * blks_w);
+		grid[i] = (blk_grid_t*) malloc(sizeof(blk_grid_t) * blks_w);
 
 	// alloc a matrix for storing block position information for display
 	r_grid = (coord_t**) malloc(sizeof(coord_t*) * blks_h);
 	for (i = 0; i < blks_h; ++i)
 		r_grid[i] = (coord_t*) malloc(sizeof(coord_t) * blks_w);
-
-	// alloc a matrix for storing distance information of each block
-	dist_grid = (coord_dist_t**) malloc(sizeof(coord_dist_t*) * blks_h);
-	for (i = 0; i < blks_h; ++i)
-		dist_grid[i] = (coord_dist_t*) malloc(sizeof(coord_dist_t) * blks_w);
-
-	// alloc a matrix for storing block validity information of each block
-	validity_grid = (coord_valid_t**) malloc(sizeof(coord_valid_t*) * blks_h);
-	for (i = 0; i < blks_h; ++i)
-		validity_grid[i] = (coord_valid_t*) malloc(sizeof(coord_valid_t) * blks_w);
 
 	// alloc a matrix for storing area block classification information
 	valid_classfied.area_grid = (coord_area_t**) malloc(sizeof(coord_area_t*) * blks_h);
@@ -81,23 +62,19 @@ void update_grids(int blks)
 		valid_classfied.area_grid[i] = (coord_area_t*) malloc(sizeof(coord_area_t) * blks_w);
 
 
-	// init position matrix same as real image size
+	// init grids
 	for (i = 0; i < blks_h; ++i){
 		for (j = 0; j < blks_w; ++j){
-			grid[i][j].x = (int)((float)(j+1)*full_blk_w - half_blk_w);
-			grid[i][j].y = (int)((float)(i+1)*full_blk_h - half_blk_h);
 
+			grid[i][j].x = (int)((float)(j+1)*full_blk_w - half_blk_w); // center of each blk in pxl
+			grid[i][j].y = (int)((float)(i+1)*full_blk_h - half_blk_h);
+			grid[i][j].dist = 0; // dist measured of each blk
+			grid[i][j].prev_dist = 0;
+			grid[i][j].valid = 0; // validity of each blk
+
+			// center of each blk on draw window
 			r_grid[i][j].x = (int)((float)grid[i][j].x / (float)w * (float)w_wnd) + w_wnd;
 			r_grid[i][j].y = (int)((float)grid[i][j].y / (float)h * (float)h_wnd);
-
-			dist_grid[i][j].x = grid[i][j].x;
-			dist_grid[i][j].y = grid[i][j].y;
-			dist_grid[i][j].dist = 0;
-
-			validity_grid[i][j].x = grid[i][j].x;
-			validity_grid[i][j].y = grid[i][j].y;
-			validity_grid[i][j].prev_dist = 0;
-			validity_grid[i][j].valid = 0;
 
 			valid_classfied.num_area = 0;
 			valid_classfied.area_grid[i][j].x = grid[i][j].x;
@@ -108,13 +85,14 @@ void update_grids(int blks)
 	}
 
 	valid_areas.areas = (area_t*) malloc(sizeof(area_t)*MaxValidAreas);
-	danger_areas.areas = (area_t*) malloc(sizeof(area_t)*MaxValidAreas);
+	invalid_areas.areas = (area_t*) malloc(sizeof(area_t)*1);
+	danger_areas.areas = (area_t*) malloc(sizeof(area_t)*1);
 
 	return;
 }
 
 
-bool coord_cmp(coord_t l, coord_t r)
+bool coord_cmp(const coord_t l, const coord_t r)
 {
 	if (l.x == r.x && l.y == r.y)
 		return true;
@@ -123,7 +101,7 @@ bool coord_cmp(coord_t l, coord_t r)
 }
 
 
-bool grid_index_cmp(grid_index_t l, grid_index_t r)
+bool grid_index_cmp(const grid_index_t l, const grid_index_t r)
 {
 	if (l.h == r.h && l.w == r.w)
 		return true;
@@ -132,42 +110,42 @@ bool grid_index_cmp(grid_index_t l, grid_index_t r)
 }
 
 
-int convert_pxl_to_len(const int pxl, const char dim)
+int cvt_pxl_to_len(const int pxl, const char dim)
 {
 	if (valid_classfied.min_dist_avail)
 	{
-		float convert_base_w = ScaleRatio_w/(float)w;
-		float convert_base_h = ScaleRatio_h/(float)h;
+		float cvt_base_w = ScaleRatio_w/(float)w;
+		float cvt_base_h = ScaleRatio_h/(float)h;
 		int len = 0;
 
 		if (dim == 'w')
-			len = (int)((float)pxl * valid_classfied.min_avg_dist * convert_base_w);
+			len = (int)((float)pxl * valid_classfied.min_avg_dist * cvt_base_w);
 		if (dim == 'h')
-			len = (int)((float)pxl * valid_classfied.min_avg_dist * convert_base_h);
+			len = (int)((float)pxl * valid_classfied.min_avg_dist * cvt_base_h);
 
 		return len;
 	} else {
-		cerr << "ERR: convert_pxl_to_len => valid_classfied.min_dist_avail=false, cannot convert pxl to dim\n";
+		cerr << "ERR: cvt_pxl_to_len => valid_classfied.min_dist_avail=false, cannot convert pxl to dim\n";
 		return -1;
 	}
 }
 
-coord_t convert_pos_to_pxl(const coord3d_t pos)
+coord_t cvt_pos_to_pxl(const coord3d_t pos)
 {
 	/**
-	 * Convert a position of real world (relative) to a pixel point on image.
-	 * Convert only x & y.
+	 * convert a position of real world (relative) to a pixel point on image.
+	 * convert only x & y.
 	 */
-	float convert_base_w = ScaleRatio_w/(float)w;
-	float convert_base_h = ScaleRatio_h/(float)h;
+	float cvt_base_w = ScaleRatio_w/(float)w;
+	float cvt_base_h = ScaleRatio_h/(float)h;
 	coord_t pxl;
 
 	if (pos._z > 0){
 		cerr << "WARN: pos._z is positive, intended pos is backward.\n";
 	}
 
-	pxl.x = (int)((float)pos._x/(float)abs(pos._z)/convert_base_w);
-	pxl.y = (int)((float)pos._y/(float)abs(pos._z)/convert_base_h);
+	pxl.x = (int)((float)pos._x/(float)abs(pos._z)/cvt_base_w);
+	pxl.y = (int)((float)pos._y/(float)abs(pos._z)/cvt_base_h);
 
 	if (pxl.x < -(h+1)/2 || pxl.x > (h+1)/2){
 		cerr << "WARN: pxl.x exceeds border\n";
@@ -178,32 +156,32 @@ coord_t convert_pos_to_pxl(const coord3d_t pos)
 	return pxl;
 }
 
-coord3d_t convert_pxl_to_pos(const coord_t pxl, int dist)
+coord3d_t cvt_pxl_to_pos(const coord_t pxl, const int dist)
 {
 	/**
-	 * Convert a pixel point on image to a position of real world (relative).
-	 * Convert only x & y.
+	 * convert a pixel point on image to a position of real world (relative).
+	 * convert only x & y.
 	 */
-	float convert_base_w = ScaleRatio_w/(float)w;
-	float convert_base_h = ScaleRatio_h/(float)h;
+	float cvt_base_w = ScaleRatio_w/(float)w;
+	float cvt_base_h = ScaleRatio_h/(float)h;
 	coord3d_t pos;
 
-	pos._x = (int)((float)pxl.x * (float)dist * convert_base_w);
-	pos._y = (int)((float)pxl.y * (float)dist * convert_base_h);
+	pos._x = (int)((float)pxl.x * (float)dist * cvt_base_w);
+	pos._y = (int)((float)pxl.y * (float)dist * cvt_base_h);
 	pos._z = dist;
 	return pos;
 }
 
-int find_area_min_dist(area_t area)
+int find_area_min_dist(const area_t area)
 {
 	int min_dist = Inf;
-	for (int i = area.top_l.h; i < area.btm_r.h; ++i)
+	for (int i = area.topl.h; i < area.btmr.h; ++i)
 	{
-		for (int j = area.top_l.w; j < area.btm_r.w; ++j)
+		for (int j = area.topl.w; j < area.btmr.w; ++j)
 		{
-			if (validity_grid[i][j].prev_dist < min_dist)
+			if (grid[i][j].prev_dist < min_dist)
 			{
-				min_dist = validity_grid[i][j].prev_dist;
+				min_dist = grid[i][j].prev_dist;
 			}
 		}
 	}
@@ -221,17 +199,32 @@ bool has_target_obj_found(){
 	return false;
 }
 
-void setIntendPos(char axis, int val){
-	if (axis == 'x')
-		intend_pos._x = val;
-	if (axis == 'y')
-		intend_pos._y = val;
-	if (axis == 'z')
-		intend_pos._z = val;
-}
+// void setIntendPos(const char axis, const int val){
+// 	if (axis == 'x')
+// 		intend_pos._x = val;
+// 	if (axis == 'y')
+// 		intend_pos._y = val;
+// 	if (axis == 'z')
+// 		intend_pos._z = val;
+// }
 
 void resetIntendPos(){
 	intend_pos._x = 0;
 	intend_pos._y = 0;
 	intend_pos._z = 0;
+}
+
+// Convert specified area in pixel to a corresponding area in blocks
+area_t cvt_pxl_to_area(const area_t area_pxl){
+	area_t area;
+	area.topl.w = (area_pxl.topl.w + w/blks_w/2) / (w/blks_w);
+	area.btmr.w = (area_pxl.btmr.w + w/blks_w/2) / (w/blks_w);
+	area.topl.h = (area_pxl.topl.h + h/blks_h/2) / (h/blks_h);
+	area.btmr.h = (area_pxl.btmr.h + h/blks_h/2) / (h/blks_h);
+
+	if (area.topl.w >= area.btmr.w || area.topl.h >= area.btmr.h){
+		cerr << "WARN: cvt_pxl_to_area starting blk is >= to ending blk";
+	}
+
+	return area;
 }

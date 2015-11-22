@@ -2,8 +2,11 @@
 
 ##Requirememts
 ###Windows
+- Visual Studio 2013 (2015 is not supported by cuda 7.0)
+- Visual Studio 2012 redistributable x64
 - node v0.12.x
-- cmake-js < 2.0.0 (~1.9.0)
+- python 2.7 (for node modules)
+- cmake-js
 - Nvidia Driver
 - CUDA 7.0
 - ZED v0.9.1
@@ -17,6 +20,7 @@
 
 ##Build & Run
 ```
+ $ npm install
  $ npm run build		(to build)
  $ npm run				(to run)
  $ npm test				(to test)
