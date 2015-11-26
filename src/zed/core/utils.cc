@@ -190,15 +190,6 @@ int find_area_min_dist(const area_t area)
 
 void skip(){ return; }
 
-int getNum_valid_areas(){
-	return valid_areas.num_area;
-}
-
-bool has_target_obj_found(){
-	// TODO
-	return false;
-}
-
 // void setIntendPos(const char axis, const int val){
 // 	if (axis == 'x')
 // 		intend_pos._x = val;

@@ -10,6 +10,7 @@ int blks_h; // #blks in the image on vertical axis
 int num_blks_w;
 float aspect_ratio;
 bool isMovingForward;
+bool objDetected;
 
 blk_grid_t **grid = NULL;
 coord_t **r_grid = NULL;

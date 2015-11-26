@@ -24,41 +24,42 @@ NAN_METHOD(has_danger_area)
   NanReturnValue(NanNew<Number>(danger_areas.num_area));
 }
 
-NAN_METHOD(has_target_obj_found)
+NAN_METHOD(is_obj_detected)
 {
   NanScope();
-  NanReturnValue(NanNew<Number>(has_target_obj_found()));
-}
-
-NAN_METHOD(setIntendPos)
-{
-  NanScope();
-
-  intend_pos._x = args[0]->Uint32Value();
-  intend_pos._y = args[1]->Uint32Value();
-  intend_pos._z = args[2]->Uint32Value();
-
-  NanReturnUndefined();
-}
-
-NAN_METHOD(getTargetPos)
-{
-  NanScope();
-
-  Local<Object> DICT = NanNew<Object>();
-  DICT->Set(NanNew<String>("x"), NanNew<Number>(target_pos._x));
-  DICT->Set(NanNew<String>("y"), NanNew<Number>(target_pos._y));
-  DICT->Set(NanNew<String>("z"), NanNew<Number>(target_pos._z));
-
-  // Local<Array> ARRAY  = NanNew<Array>(3);
-  // ARRAY->Set(0, NanNew<Number>(target_pos._x));
-  // ARRAY->Set(1, NanNew<Number>(target_pos._y));
-  // ARRAY->Set(2, NanNew<Number>(target_pos._z));
-
-  NanReturnValue(DICT);
+  NanReturnValue(NanNew<Number>(objDetected));
 }
 
 NAN_METHOD(setIsMovingForward)
 {
   isMovingForward = (args[0]->Uint32Value() > 0) ? true : false;
 }
+
+
+// NAN_METHOD(setIntendPos)
+// {
+//   NanScope();
+
+//   intend_pos._x = args[0]->Uint32Value();
+//   intend_pos._y = args[1]->Uint32Value();
+//   intend_pos._z = args[2]->Uint32Value();
+
+//   NanReturnUndefined();
+// }
+
+// NAN_METHOD(getTargetPos)
+// {
+//   NanScope();
+
+//   Local<Object> DICT = NanNew<Object>();
+//   DICT->Set(NanNew<String>("x"), NanNew<Number>(target_pos._x));
+//   DICT->Set(NanNew<String>("y"), NanNew<Number>(target_pos._y));
+//   DICT->Set(NanNew<String>("z"), NanNew<Number>(target_pos._z));
+
+//   // Local<Array> ARRAY  = NanNew<Array>(3);
+//   // ARRAY->Set(0, NanNew<Number>(target_pos._x));
+//   // ARRAY->Set(1, NanNew<Number>(target_pos._y));
+//   // ARRAY->Set(2, NanNew<Number>(target_pos._z));
+
+//   NanReturnValue(DICT);
+// }

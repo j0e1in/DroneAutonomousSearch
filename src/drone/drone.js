@@ -21,8 +21,10 @@ var Drone = (function(){
 
 		/** Setup drone configs **/
 		prv.get(this).drone.config('general:navdata_demo', 'TRUE');
-		// this[sym.drone].config('control:outdoor', 'TRUE'); // enables wind estimation
-		// this[sym.drone].config('control:flight_without_shell', 'TRUE');
+		prv.get(this).drone.config('control:altitude_min', '1000');
+		prv.get(this).drone.config('control:altitude_max', '1500');
+		// prv.get(this).drone.config('control:outdoor', 'TRUE'); // enables wind estimation
+		// prv.get(this).drone.config('control:flight_without_shell', 'TRUE');
 
 		/** Navdata **/
 		if (useNavdata){
@@ -69,6 +71,20 @@ var Drone = (function(){
 		},
 		after: function(timer, cb){
 			prv.get(this).drone.after(timer, cb);
+		},
+		led: function(mode, freq, duration){
+			prv.get(this).drone.animateLeds(mode, freq, duration);
+			/* Available modes:
+				['blinkGreenRed', 'blinkGreen', 'blinkRed', 'blinkOrange', 'snakeGreenRed',
+				'fire', 'standard', 'red', 'green', 'redSnake', 'blank', 'rightMissile',
+				'leftMissile', 'doubleMissile', 'frontLeftGreenOthersRed',
+				'frontRightGreenOthersRed', 'rearRightGreenOthersRed',
+				'rearLeftGreenOthersRed', 'leftGreenRightRed', 'leftRedRightGreen',
+				'blinkStandard']
+
+				*freq & duration are in second
+			 */
+
 		},
 		log: function(msg){
 			console.log('Dronelog ## ' + msg);

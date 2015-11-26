@@ -10,11 +10,11 @@
     "bindings": "^1.2.1",
     "keypress": "^0.2.1",
     "nan": "~1.9.0",
-    "sleep": "^3.0.0",
-    "webworker-threads": "^0.6.2"
+    "sleep": "^3.0.0"
   },
   "scripts": {
     "build": "cmake-js build",
+    "rebuild": "cmake-js rebuild",
     "test": "node src/drone/test/test.js",
     "start": "node src/drone/main.js"
   }

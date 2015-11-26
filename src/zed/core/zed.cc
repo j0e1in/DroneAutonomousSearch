@@ -2,14 +2,32 @@
 * Cmd line Arg(optional): SVO path
 */
 
+// #include <opencv2/highgui/highgui.hpp>
+
 //Standard includes
 #include <iostream>
 #include <chrono> //high_resolution_clock
+#include <thread>
 #include <ctime>
+#include <vector>
+#include <future>
+
+//ZED include
+#include <zed/Camera.hpp>
+
+/// Glut and OpenGL extension (GLEW) for shaders
+#include "GL/glew.h"
+#include "GL/glut.h"
+
+//Cuda includes
+#include "cuda.h"
+#include "cuda_runtime.h"
+#include "cuda_gl_interop.h"
 
 #include "FPS.h"
 #include "zed.h"
 #include "env_eval.h"
+#include "object_detect.h"
 
 using namespace std;
 using namespace sl::zed;
@@ -29,17 +47,21 @@ GLuint shaderF;
 GLuint program;
 
 bool quit;
+bool refreshed; // for object detection
 bool initZed_ready = false;
 int reliabilityIdx;
 Fps fps;
+
+cv::Mat cvimg;
+// cv::Mat frame, img;
+// std::vector<cv::Rect> rects;
+
 
 //Here is the very simple fragment shader for flipping Red and Blue
 std::string strFragmentShad = ("uniform sampler2D texImage;\n"
       " void main() {\n"
       " vec4 color = texture2D(texImage, gl_TexCoord[0].st);\n"
       " gl_FragColor = vec4(color.b, color.g, color.r, color.a);\n}");
-
-
 
 bool is_initZed_ready(){
   return initZed_ready;
@@ -64,6 +86,22 @@ void keyboard(unsigned char key, int x, int y)
       if (num_blks_w > 0)
         num_blks_w -= 1;
       update_grids(num_blks_w);
+      break;
+
+    case '1':
+      log_opt.drawDepthMode = 1;
+      break;
+
+    case '2':
+      log_opt.drawDepthMode = 2;
+      break;
+
+    case '3':
+      log_opt.drawDepthMode = 3;
+      break;
+
+    case '4':
+      log_opt.drawDepthMode = 4;
       break;
 
     case 'm':
@@ -176,7 +214,8 @@ void print_depth_info()
           for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
             if (grid[i][j].valid < 0){
               ostringstream ostr;
-              ostr << "dg-\n" << (float)grid[i][j].dist / 100.;
+              // ostr << "dg-\n" << (float)grid[i][j].dist / 100.;
+              ostr << "dg";
               printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
               glColor3f(1.0f, 1.0f, 1.0f);
             }
@@ -187,7 +226,8 @@ void print_depth_info()
           for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
             if (grid[i][j].valid == 0){
               ostringstream ostr;
-              ostr << "nv-\n" << (float)grid[i][j].dist / 100.;
+              // ostr << "nv-\n" << (float)grid[i][j].dist / 100.;
+              ostr << "nv";
               printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
               glColor3f(1.0f, 1.0f, 1.0f);
             }
@@ -198,7 +238,8 @@ void print_depth_info()
           for (int j = sens_area.topl.w-1; j < sens_area.btmr.w; ++j){
             if (grid[i][j].valid > 0){
               ostringstream ostr;
-              ostr << "vd-\n" << (float)grid[i][j].dist / 100.;
+              // ostr << "vd-\n" << (float)grid[i][j].dist / 100.;
+              ostr << "vd";
               printtext(r_grid[i][j].x, r_grid[i][j].y, ostr.str().c_str());
               glColor3f(1.0f, 1.0f, 1.0f);
             }else{
@@ -272,6 +313,19 @@ void get_depth()
   return;
 }
 
+// A infinite loop for an async thread for object detection
+void detectObject(bool show){
+  while(true){
+    if (refreshed){
+      refreshed = false;
+      if (detectAndDisplay(cvimg, show))
+        objDetected = true;
+    }
+    else
+      std::this_thread::sleep_for (std::chrono::milliseconds(50));
+  }
+}
+
 //glut main loop : grab --> extract GPU Mat --> send to OpenGL and quad.
 void draw()
 {
@@ -279,7 +333,7 @@ void draw()
 
   int res = zed->grab(dm_type, true, true);
 
-  if (res == 0)
+  if (!res)
   {
     fps.update();
 
@@ -287,7 +341,18 @@ void draw()
     // With Gl texture, we have to use the cudaGraphicsSubResourceGetMappedArray cuda functions. It will link the gl texture with a cuArray.
     // Then, we just have to copy our GPU Buffer to the CudaArray (D2D copy).
     // Between , you can do some other GPU stuffs.
-    Mat gpuImage = zed->getView_gpu(VIEW_MODE::STEREO_LEFT);
+
+    Mat gpuImage = zed->retrieveImage_gpu(SIDE::LEFT); // for cuda
+    Mat cpuImage = zed->retrieveImage(SIDE::LEFT);  // for opencv
+
+    // convert ZED Mat to cv Mat
+    slMat2cvMat(cpuImage).copyTo(cvimg);
+    // detectAndDisplay(cvimg);
+
+    refreshed = true; // refreshed img for opencv
+    // std::async(std::launch::async, detectAndDisplay, cvimg);
+
+
     cudaArray_t ArrIm;
     cudaGraphicsMapResources(1, &pcuImageRes, 0);
     cudaGraphicsSubResourceGetMappedArray(&ArrIm, pcuImageRes, 0, 0);
@@ -379,6 +444,7 @@ void draw()
   }
   high_resolution_clock::time_point t2 = high_resolution_clock::now();
   auto duration = duration_cast<milliseconds>( t2 - t1 ).count();
+  // log loop time or not
   log_opt.loop_time ? clog << "loop: " << duration << "ms\n" : skip();
 }
 
@@ -396,7 +462,6 @@ vector<string> split(const string &s, char delim)
 
 void parseArgs(const string arg_str)
 {
-
   vector<string> argv = split(arg_str, ' ');
   bool isLogArg = false; // for "_log" option
   bool isDrawArg = false; // for "_draw" option
@@ -498,14 +563,17 @@ int initZed(const string arg_str)
   w = zed->getImageSize().width;
   h = zed->getImageSize().height;
 
+  cvimg.create(h, w, CV_8UC4); // allocate cv image
+
   aspect_ratio = ((float)h/(float)w);
 
-  sens_area_pxl.topl = {(int)(w*.1f), (int)(h*.25f)};
-  sens_area_pxl.btmr = {(int)(w*.9f), (int)(h*.75f)};
+  // Add sensing mask
+  sens_area_pxl.topl = {(int)(w*.15f), (int)(h*.25f)};
+  sens_area_pxl.btmr = {(int)(w*.9f), (int)(h*.70f)};
+  sens_area_pxl_moving.topl = {(int)(w*.15f), (int)(h*.25f)};
+  sens_area_pxl_moving.btmr = {(int)(w*.9f), (int)(h*.55f)};
 
-  sens_area_pxl_moving.topl = {(int)(w*.1f), (int)(h*.25f)};
-  sens_area_pxl_moving.btmr = {(int)(w*.9f), (int)(h*.60f)};
-
+  // Allocate grids
   num_blks_w = DefaultBlocks;
   update_grids(num_blks_w);
 
@@ -515,6 +583,10 @@ int initZed(const string arg_str)
     dm_type = SENSING_MODE::RAW;
 
   initZed_ready = true;
+  objDetected = false;
+
+  objdetectMain();
+  // namedWindow("Obj");
 
   // Setting confidence threshold for depth map
   // reliabilityIdx = 100;
@@ -578,6 +650,8 @@ int initZed(const string arg_str)
   /*********** OPENGL END ***********/
   /**********************************/
 
+  std::async(detectObject, false);
+
   //Set Draw Loop
   glutKeyboardFunc(keyboard);
   glutDisplayFunc(draw);
@@ -585,6 +659,7 @@ int initZed(const string arg_str)
 
   return 0;
 }
+
 
 
 

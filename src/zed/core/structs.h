@@ -2,6 +2,7 @@
 #define STRUCTS_H
 
 #include <cstddef>
+#include "opencv2/highgui/highgui.hpp"
 
 typedef struct coord_ {
 	int x;
@@ -80,6 +81,11 @@ typedef struct log_ {
 		// 		2 (area classification)
 
 } log_t;
+
+typedef struct classifiers_ {
+	std::vector<std::string> classFilePaths;
+	int num_classifiers;
+} classifiers_t;
 
 
 #endif

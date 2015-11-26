@@ -6,7 +6,10 @@
 #include <sstream>
 
 #include <nan.h>
-#include "nan_initzed_async.h"
+#include "nan_async_worker.h"
+#include "core/zed.h"
+#include "core/object_detect.h"
+
 
 using namespace v8;
 using namespace std;
@@ -15,15 +18,16 @@ class initZedAsyncWorker : public NanAsyncWorker
 {
 public:
 	initZedAsyncWorker(string args_str, NanCallback *callback)
-		: NanAsyncWorker(callback), args_str(args_str) {}
+		: args_str(args_str), NanAsyncWorker(callback) {}
 	~initZedAsyncWorker() {}
 
-	void Execute()
-	{
+	void Execute(){
+
 		if (initZed(args_str) < 0){ // main method
 			cerr << "ERR: Initializing ZED failed.";
 			exit(0);
 		}
+
 	}
 
 	// void HandleOKCallback(){
@@ -41,7 +45,7 @@ private:
 
 
 
-NAN_METHOD(initZed)
+NAN_METHOD(init_Zed)
 {
 	NanScope();
 
@@ -62,4 +66,36 @@ NAN_METHOD(is_initZed_ready)
 {
 	NanScope();
   NanReturnValue(NanNew<Number>(is_initZed_ready()));
+}
+
+
+//=========================================================
+//=========================================================
+//=========================================================
+
+
+class objdetectAsyncWorker : public NanAsyncWorker
+{
+public:
+	objdetectAsyncWorker(NanCallback *callback)
+		: NanAsyncWorker(callback) {}
+	~objdetectAsyncWorker() {}
+
+	void Execute(){
+
+		if (objdetectMain() < 0){ // main method
+			cerr << "ERR: Initializing object detection failed.";
+			exit(0);
+		}
+
+	}
+};
+
+NAN_METHOD(obj_detect)
+{
+	NanScope();
+
+	NanCallback *callback = new NanCallback();
+	NanAsyncQueueWorker(new objdetectAsyncWorker(callback)); // new a worker instance here
+  NanReturnUndefined();
 }

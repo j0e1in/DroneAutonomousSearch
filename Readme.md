@@ -6,16 +6,15 @@
 - Visual Studio 2012 redistributable x64
 - node v0.12.x
 - python 2.7 (for node modules)
-- cmake-js
+- cmake-js v2.1.0
 - Nvidia Driver
 - CUDA 7.0
 - ZED v0.9.1
+- OpenCV 2.4.9 (Add 'C:\\..opencv_2.4.9\build' as 'OPENCV_DIR' ENV variable)
 
-<!-- NO NEED FOR NOW
-- Boost library
-	- BOOST_INCLUDE_DIRS: ${BOOST_ROOT}
-	- BOOST_LIBRARY_DIR_64: ${BOOST_ROOT}\lib64-msvc-12.0
--->
+###Add Path
+- Add 'C:\\..opencv_2.4.9\build' as system variable 'OPENCV_DIR'
+- Add 'C:\\..opencv_2.4.9\build\x64\vc12\bin' to 'Path'
 
 
 ##Build & Run
@@ -23,5 +22,5 @@
  $ npm install
  $ npm run build		(to build)
  $ npm run				(to run)
- $ npm test				(to test)
+ $ npm start			(to start)
 ```

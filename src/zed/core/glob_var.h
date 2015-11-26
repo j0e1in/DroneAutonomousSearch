@@ -7,7 +7,7 @@
 /** Constants **/
 
 //constants
-const int DefaultBlocks = 20; // max: 30
+const int DefaultBlocks = 25; // max: 30
 const float DefaultFPS = 30.f;
 const int CameraResolution = 720;
 // camera resolution:
@@ -47,7 +47,7 @@ const int Inf = 999;
  */
 
 const int minCalibrationDist = 50; // min distance zed can analyze
-const int minSafeDistance = minCalibrationDist + 50; // in cm
+const int minSafeDistance = minCalibrationDist + 30; // in cm
 const int maxSafeDistance = minSafeDistance + 20;
 const int MaxValidAreas = 20;
 const int DroneSafeWidth = 80; // minimal width a drone can pass through
@@ -65,6 +65,7 @@ extern int blks_h;
 extern int num_blks_w;
 extern float aspect_ratio;
 extern bool isMovingForward;
+extern bool objDetected;
 
 extern blk_grid_t **grid;
 extern coord_t **r_grid;
