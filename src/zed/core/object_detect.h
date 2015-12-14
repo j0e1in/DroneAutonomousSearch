@@ -3,5 +3,6 @@
 
 int objdetectMain();
 bool detectAndDisplay(cv::Mat frame, bool show);
+int objdetect_test(const std::string arg_str);
 
 #endif

@@ -2,8 +2,16 @@ var zed = require('bindings')('zed');
 var Drone = require('./drone');
 var utils = require('./utils');
 var sleep = require('sleep');
+var path = require('path');
 
 var args = process.argv.slice(2); //get args from the third argument ([0],[1],[2],...)
+
+// Specify casecade classifiers
+var casecadePath = "D:\\GraduationProject\\DroneSearch\\src\\haarcascades\\";
+args.push('_cc'); // cascade classifier option
+args.push(casecadePath + 'haarcascade_frontalface_alt.xml');
+args.push(casecadePath + 'LEye18x12.xml');
+
 var arg_str = args.join(' '); // join args to a string for initZed
 
 zed.initZed(arg_str);
@@ -15,7 +23,6 @@ var drone = new Drone(zed, useNavdata='false');
 
 var refreshTime = 1/29; // 1/fps
 
-
 setTimeout(function(){
 
 	// drone.disableEmergency();
@@ -23,12 +30,13 @@ setTimeout(function(){
 
 	drone.takeoff();
 
+
 	drone.after(4000, function(){
 		drone.stop();
 	});
 
 	drone.after(4000, function(){
-		roam(15000);
+		roam(30000);
 	});
 
 }, 1500);
@@ -56,10 +64,6 @@ function roam(timer){
 	var intervalID = setInterval(function(){
 
 		if (stopRoamming){
-			if (zed.is_obj_detected()){
-				drone.log("Stop for 3 sec...");
-				sleep.sleep(3);
-			}
 			console.log('Stop roamming');
 			drone.land();
 			clearInterval(intervalID)
@@ -102,7 +106,7 @@ function roam(timer){
 					curMove = 's';
 				}
 				if (curMove != 'c'){
-					drone.clockwise(0.2); // rotate if cannot move forward
+					drone.clockwise(0.3); // rotate if cannot move forward
 					curMove = 'c';
 				}
 
@@ -145,11 +149,17 @@ function roam(timer){
 		if (zed.is_obj_detected()){
 			drone.log("!!!object found!!!");
 			drone.led('snakeGreenRed', 5, 5);
+			console.log('Stop roamming');
 			drone.stop();
-			stopRoamming = true;
+			clearInterval(intervalID);
 		}
 
 	}, refreshTime);
+
+	drone.stop();
+	drone.after(5000, function(){
+		drone.land();
+	});
 
 }//function roam
 

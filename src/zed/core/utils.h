@@ -3,6 +3,7 @@
 
 #include "glob_var.h"
 
+void parseArgs(const std::string arg_str);
 void update_grids(const int blks);
 bool coord_cmp(const coord_t l, const coord_t r);
 bool grid_index_cmp(const grid_index_t l, const grid_index_t r);

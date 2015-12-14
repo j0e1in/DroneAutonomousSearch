@@ -39,6 +39,7 @@ public:
 	// 	int argc = 0;
 	// 	callback->Call(argc, argv);
 	// }
+
 private:
 	string args_str; // arguments for the program
 };
@@ -77,25 +78,27 @@ NAN_METHOD(is_initZed_ready)
 class objdetectAsyncWorker : public NanAsyncWorker
 {
 public:
-	objdetectAsyncWorker(NanCallback *callback)
-		: NanAsyncWorker(callback) {}
+	objdetectAsyncWorker(string args_str, NanCallback *callback)
+		: args_str(args_str), NanAsyncWorker(callback) {}
 	~objdetectAsyncWorker() {}
 
 	void Execute(){
-
-		if (objdetectMain() < 0){ // main method
+		if (objdetect_test(args_str) < 0){ // main method
 			cerr << "ERR: Initializing object detection failed.";
 			exit(0);
 		}
-
 	}
+private:
+	string args_str; // arguments for the program
 };
 
 NAN_METHOD(obj_detect)
 {
 	NanScope();
 
+	string arg_str(*NanAsciiString(args[0]));
+
 	NanCallback *callback = new NanCallback();
-	NanAsyncQueueWorker(new objdetectAsyncWorker(callback)); // new a worker instance here
+	NanAsyncQueueWorker(new objdetectAsyncWorker(arg_str, callback)); // new a worker instance here
   NanReturnUndefined();
 }

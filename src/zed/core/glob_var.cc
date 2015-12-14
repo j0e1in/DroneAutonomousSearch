@@ -11,6 +11,7 @@ int num_blks_w;
 float aspect_ratio;
 bool isMovingForward;
 bool objDetected;
+std::vector<std::string> cascade_files;
 
 blk_grid_t **grid = NULL;
 coord_t **r_grid = NULL;

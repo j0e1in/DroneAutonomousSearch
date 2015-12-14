@@ -19,25 +19,9 @@ const int SensingMode = 1;
 //		1 (FULL)
 //	  2 (RAW)
 
-// real width in image of every 1 cm from camera, measured in cm
-// const float Dist_Width_Ratio = 17.8/12.5;//= 1.424 //11/7.5 = 1.4667 //20.8/14.4 = 1.4444
-// real hieght in image of every 1 cm from camera, measured in cm
-// const float Dist_Hieght_Ratio = 9.0/7.8;
-/* note: these ratios assume no distortion on images */
-// const int FocalLength = 144; // cm
-// const float ScaleRatio = (float)FocalLength/100.f;
 const float ScaleRatio_w = 7.1f/5.f;
 const float ScaleRatio_h = 9.5f/12.f;
 const int Inf = 999;
-
-// (w)
-// 7.1/5
-// 14.2/10
-
-// (h)
-// 3.3/4
-// 6.3/8
-// 9.4/12
 
 /**
  * Rules of validity:
@@ -46,7 +30,7 @@ const int Inf = 999;
  * 		dist < minSafeDistance: validity = -1
  */
 
-const int minCalibrationDist = 50; // min distance zed can analyze
+const int minCalibrationDist = 80; // min distance zed can analyze
 const int minSafeDistance = minCalibrationDist + 30; // in cm
 const int maxSafeDistance = minSafeDistance + 20;
 const int MaxValidAreas = 20;
@@ -66,6 +50,8 @@ extern int num_blks_w;
 extern float aspect_ratio;
 extern bool isMovingForward;
 extern bool objDetected;
+extern std::vector<std::string> cascade_files;
+
 
 extern blk_grid_t **grid;
 extern coord_t **r_grid;

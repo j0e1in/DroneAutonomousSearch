@@ -9,11 +9,12 @@
 - cmake-js v2.1.0
 - Nvidia Driver
 - CUDA 7.0
-- ZED v0.9.1
-- OpenCV 2.4.9 (Add 'C:\\..opencv_2.4.9\build' as 'OPENCV_DIR' ENV variable)
+- ZED v0.9.2
+- OpenCV 2.4.9
 
 ###Add Path
-- Add 'C:\\..opencv_2.4.9\build' as system variable 'OPENCV_DIR'
+- Add 'C:\\..opencv_2.4.9\build'
+	or '[ZED SDK PATH]\dependencies\opencv_2.4.9' as system variable 'OPENCV_DIR'
 - Add 'C:\\..opencv_2.4.9\build\x64\vc12\bin' to 'Path'
 
 
@@ -21,6 +22,5 @@
 ```
  $ npm install
  $ npm run build		(to build)
- $ npm run				(to run)
  $ npm start			(to start)
 ```

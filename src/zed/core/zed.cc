@@ -448,69 +448,6 @@ void draw()
   log_opt.loop_time ? clog << "loop: " << duration << "ms\n" : skip();
 }
 
-// For parsing args
-vector<string> split(const string &s, char delim)
-{
-    vector<string> elems;
-    stringstream ss(s);
-    string item;
-    while (getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
-}
-
-void parseArgs(const string arg_str)
-{
-  vector<string> argv = split(arg_str, ' ');
-  bool isLogArg = false; // for "_log" option
-  bool isDrawArg = false; // for "_draw" option
-
-  // for (auto it=args.begin(); it != args.end(); it++){
-  for (const string &it : argv){
-    if (it.at(0) == '_'){
-
-      //reset flags
-      isLogArg = false;
-      isDrawArg = false;
-
-      if (it == "_h"){
-        clog << "========== Help Menu ==========\n"
-             << "\n"
-             << "  _h     help menu\n"
-             << "\n"
-             << "  _log   log debug info, available options:\n"
-             << "    @ example: '_log loop_time'\n"
-             << "    > loop_time   -- duration of each draw loop takes\n"
-             << "    > danger   -- whether has danger, and the dist of the block\n"
-             << "\n"
-             << "  _draw  draw depth info on window, available options:\n"
-             << "    @ example: '_draw 1'\n"
-             << "    > 0   none, default value\n"
-             << "    > 1   draw distance of each block\n"
-             << "    > 2   draw area classification\n"
-             << "    > 3   draw danger, invalid or valid blks\n"
-             << "    > 4   draw sensing area\n"
-             << "\n"
-             << "===============================\n";
-        exit(0);
-      }else if (it == "_log"){
-        isLogArg = true;
-      }else if (it == "_draw"){
-        isDrawArg = true;
-      }
-
-    }else if (isLogArg){ // "-log"
-      log_opt.loop_time = (it == "loop_time");
-      log_opt.danger = (it == "danger");
-    }else if (isDrawArg){
-      log_opt.drawDepthMode = (atoi(it.c_str()));
-      clog << "@@ log_opt.drawDepthMode is set to " << log_opt.drawDepthMode << "\n";
-      isDrawArg = false; // accept only one argument
-    }
-  }
-}
-
 int initZed(const string arg_str)
 {
   parseArgs(arg_str);
