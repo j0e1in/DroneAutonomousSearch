@@ -7,7 +7,7 @@ var path = require('path');
 var args = process.argv.slice(2); //get args from the third argument ([0],[1],[2],...)
 
 // Specify casecade classifiers
-var casecadePath = "D:\\GraduationProject\\DroneSearch\\src\\haarcascades\\";
+var casecadePath = "D:\\Projects\\GraduationProject\\DroneSearch\\src\\haarcascades\\";
 args.push('_cc'); // cascade classifier option
 args.push(casecadePath + 'haarcascade_frontalface_alt.xml');
 args.push(casecadePath + 'LEye18x12.xml');
@@ -21,7 +21,7 @@ var drone = new Drone(zed, useNavdata='false');
 
 //==========================================================//
 
-var refreshTime = 1/29; // 1/fps
+var refreshTime = 1/22; // 1/fps
 
 setTimeout(function(){
 
@@ -44,6 +44,7 @@ setTimeout(function(){
 
 
 function roam(timer){
+	var isObjDetected = 0;
 
 	// set timer for stop roamming
 	var stopRoamming = false;
@@ -55,7 +56,7 @@ function roam(timer){
 
 	var evtStk = { // recording an event happens squentially
 		stk: 0,
-		thresh: 15,
+		thresh: 12,
 		event: '',
 	};
 
@@ -131,7 +132,7 @@ function roam(timer){
 				}
 
 				if (curMove != 'f'){
-					drone.front(0.1);
+					drone.front(0.2);
 					curMove = 'f';
 				}
 
@@ -147,17 +148,22 @@ function roam(timer){
 		}
 
 		if (zed.is_obj_detected()){
-			drone.log("!!!object found!!!");
-			drone.led('snakeGreenRed', 5, 5);
-			console.log('Stop roamming');
-			drone.stop();
-			clearInterval(intervalID);
+			isObjDetected += 1;
+			if (isObjDetected > 40){
+				drone.log("!!!object found!!!");
+				drone.led('snakeGreenRed', 5, 5);
+				console.log('Stop roamming');
+				drone.stop();
+				clearInterval(intervalID);
+			}
+		}else{
+			isObjDetected = 0;
 		}
 
 	}, refreshTime);
 
 	drone.stop();
-	drone.after(5000, function(){
+	drone.after(2000, function(){
 		drone.land();
 	});
 

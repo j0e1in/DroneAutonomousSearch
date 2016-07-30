@@ -21,8 +21,8 @@ var Drone = (function(){
 
 		/** Setup drone configs **/
 		prv.get(this).drone.config('general:navdata_demo', 'TRUE');
-		prv.get(this).drone.config('control:altitude_min', '800');
-		prv.get(this).drone.config('control:altitude_max', '1200');
+		prv.get(this).drone.config('control:altitude_min', '500');
+		prv.get(this).drone.config('control:altitude_max', '800');
 		// prv.get(this).drone.config('control:outdoor', 'TRUE'); // enables wind estimation
 		// prv.get(this).drone.config('control:flight_without_shell', 'TRUE');
 

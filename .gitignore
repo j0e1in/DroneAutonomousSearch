@@ -1,2 +1,8 @@
 node_modules/
 build/
+reference_code/
+
+*.log
+*.exe
+*.out
+._*
