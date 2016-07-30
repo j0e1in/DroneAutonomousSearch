@@ -6,3 +6,5 @@ reference_code/
 *.exe
 *.out
 ._*
+
+.DS_Store
