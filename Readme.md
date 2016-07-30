@@ -29,6 +29,8 @@ The obstacle avoidance and human detection parts are written in c++, and then ar
 
 ##Build & Run
 ```bash
+ $ mkdir build && cd build
+ $ cmake ..
  $ npm install		(to install dependent npm modules)
  $ npm run build		(to build)
  $ npm start			(to start)
