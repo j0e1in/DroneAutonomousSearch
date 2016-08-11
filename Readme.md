@@ -1,6 +1,6 @@
 #Drone Autonomous Searching System
 
-A system that makes drone search in a closed area autonomously. By observing surroundings with a front stereo camera (no budget for 3 or 4 cameras), it detects obstacles and avoids them in real-time. No foreknowledge of the environment is required. I use opencv cascade classifiers for demonstrating searching for humans in a closed area.
+A program that makes drone search in a closed area autonomously. By observing surroundings with a front stereo camera (no budget for 3 or 4 cameras), it detects obstacles and avoids them in real-time. No foreknowledge of the environment is required. I use opencv cascade classifiers for demonstrating searching for humans in a closed area.
 
 The obstacle avoidance and human detection parts are written in c++, and then are wrapped as a nodejs library for controlling drone using nodejs. (Since the [third-party  ARDrone2.0 nodejs client](https://github.com/felixge/node-ar-drone) is much easier to program.)
 
